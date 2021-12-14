@@ -2,12 +2,61 @@ import socket, os, threading, gpiozero, bluetooth, uuid, subprocess, serial
 # Custom Libs
 import utils, config
 
+global clients_bt
+global clients_sock
+clients_bt = []
+clients_sock = []
+
 def execShell(cmd_line):
     subprocess.call(cmd_line, shell=True)
 
 def execScript(script):
     exec("from scripts import " + script)
     exec(script + ".main()")
+
+def backgroundAPIThread(client):
+    while True:
+        request = client.recv(1024).decode()
+
+        if request == "broadcast_to_all":
+            client.send("ok".encode())
+            message = client.recv(1024)
+            for client_bt in clients_bt:
+                client_bt.send(message)
+            for client_sock in clients_sock:
+                client_sock.send(message)
+            client.send("done".encode())
+
+        if request == "broadcast_to_bt":
+            client.send("ok".encode())
+            message = client.recv(1024)
+            for client_bt in clients_bt:
+                client_bt.send(message)
+            client.send("done".encode())
+
+        if request == "broadcast_to_sock":
+            client.send("ok".encode())
+            message = client.recv(1024)
+            for client_bt in clients_bt:
+                client_bt.send(message)
+            client.send("done".encode())
+        
+        if request == "execscript":
+            client.send("ok".encode())
+            script = client.recv(1024).decode()
+            thread = threading.Thread(target=execScript, args=[script])
+            thread.start()
+            client.send("done".encode())
+
+def backgroundAPI():
+    socke = socket.socket()
+    socke.bind(("127.0.0.1", 8787))
+    socke.listen()
+
+    while True:
+        client, client_info = socke.accept()
+        thread = threading.Thread(target=backgroundAPIThread, args=[client])
+        thread.start()
 
 def ServThread(client, client_info):
 
@@ -130,11 +179,15 @@ def main():
 
     print("Starting CTOS v1...")
     socket_thread = threading.Thread(target=startServSOCK)
+    background_thread = threading.Thread(target=backgroundAPI)
     bluetooth_thread = threading.Thread(target=startServBLE)
 
     socket_thread.start()
     print("Started socket server")
 
+    background_thread.start()
+    print("started background api")
+    
     bluetooth_thread.start()
     print("Started bluetooth server")
 
