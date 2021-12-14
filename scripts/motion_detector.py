@@ -44,9 +44,4 @@ while True:
         (x, y, w, h)=cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 3)
 
-    cv2.imshow("Gray Frame",gray)
-    cv2.imshow("Delta Frame",delta_frame)
-    cv2.imshow("Threshold Frame",thresh_frame)
-    cv2.imshow("Color Frame",frame)
-
     key = cv2.waitKey(1)
