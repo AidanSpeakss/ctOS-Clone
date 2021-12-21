@@ -193,13 +193,18 @@ def main():
 
     print("Starting startup scripts...")
     for script in os.listdir("scripts/"):
-        with open("scripts/" + script, "r") as f:
-            scriptCode = f.readline()
-            if scriptCode == "#startup script":
-                print("Starting script " + script)
-                thread = threading.Thread(target=execScript, args=[script])
-                thread.start()
-                print("Started " + script)
+        if script == "__pycache__":
+            pass
+        else:
+            with open("scripts/" + script, "r") as f:
+                scriptCode = f.readline()
+                print(scriptCode)
+                if scriptCode == "#startup script\n":
+                    print("Starting script " + script)
+                    script = script.replace(".py", "")
+                    thread = threading.Thread(target=execScript, args=[script])
+                    thread.start()
+                    print("Started " + script)
     print("Finished starting scripts")
 
 main()
