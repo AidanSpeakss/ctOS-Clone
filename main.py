@@ -170,10 +170,11 @@ def startServSOCK():
     sock.bind(("0.0.0.0", 5753))
     sock.listen()
 
-    client_sock, client_info = sock.accept()
+    while True:
+        client_sock, client_info = sock.accept()
 
-    thread = threading.Thread(target=ServThread, args=[client_sock, client_info])
-    thread.start()
+        thread = threading.Thread(target=ServThread, args=[client_sock, client_info])
+        thread.start()
 
 def main():
 
